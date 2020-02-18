@@ -18,6 +18,14 @@ impl ArgRange {
     pub fn is_single(&self) -> bool {
         self.current.saturating_add(self.step) > self.limit
     }
+    
+    pub fn new(cur: usize, lim: usize, s: usize) -> Self {
+        Self {
+            current: cur,
+            limit: lim,
+            step: s,
+        }
+    }
 }
 
 impl Iterator for ArgRange {

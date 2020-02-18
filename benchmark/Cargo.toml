@@ -3,11 +3,13 @@ name = "parking_lot-benchmark"
 version = "0.0.0"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
 parking_lot = {path = ".."}
 seqlock = "0.1"
 libc = "0.2"
+gnuplot = "0.0.34"
 
 [[bin]]
 name = "mutex"
@@ -16,6 +18,10 @@ path = "src/mutex.rs"
 [[bin]]
 name = "rwlock"
 path = "src/rwlock.rs"
+
+[[bin]]
+name = "plot"
+path = "src/plot.rs"
 
 [features]
 nightly = ["parking_lot/nightly"]
