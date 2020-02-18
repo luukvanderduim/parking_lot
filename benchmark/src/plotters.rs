@@ -32,7 +32,7 @@ pub(crate) fn plot_mutex_2D(data: Mutex2D, cmd: &str, args: &[&str]) -> Result<(
             .for_each( |e| { 
              
                     d[vidx] = e.trim().split_whitespace().filter_map( |word| word.parse::<f64>().ok()).step_by(3).next().expect("No f64 found");
-                    dbg!(vidx += 1);
+                    vidx += 1;
 
                 if vidx % 3 == 0 {
                 fg.clear_axes();
