@@ -44,9 +44,6 @@
 /// 
 /// 
 
-
-
-
 use core::fmt;
 use core::str::FromStr;
 
@@ -472,7 +469,8 @@ fn main()  {
         println!("RwLock selected.");
         arguments.remove(0);
         println!("Parsing args: {:?}", &arguments);
-                
+        
+        // find_axis returns, if found, the &str of the axis and a reduced arguments list
         if let Ok((xstr, arguments)) = find_axis(&arguments.iter().map(|i| &**i).collect::<Vec<&str>>()) {
             println!("Found RwLock x-axis argument: {}", &xstr);
             if let Ok((ystr, arguments)) = find_axis(&arguments.iter().map(|i| &**i).collect::<Vec<&str>>()) {

@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 use super::*;
 
+
 pub(crate) fn plot_mutex_2D(data: Mutex2D, cmd: &str, args: &[&str]) -> Result<(), Box<dyn Error>>  {
     
     let mut fg = Figure::new();
@@ -11,7 +12,6 @@ pub(crate) fn plot_mutex_2D(data: Mutex2D, cmd: &str, args: &[&str]) -> Result<(
     let len = data.get_xrange().clone().count();
     let ranger = data.get_xrange().clone();
     let title = format!("{} locking performance as a function of {}", primitive_name, xarg);
-
     
     let mut d: Vec<f64> = vec![0.0; len * 3];
     let mut vidx: usize = 0;
@@ -19,7 +19,6 @@ pub(crate) fn plot_mutex_2D(data: Mutex2D, cmd: &str, args: &[&str]) -> Result<(
     fg.set_terminal("", "plot_mutex_2D");
     fg.set_title(&title);
     
-
     let stdout = Command::new(cmd)
     .args(args)
     .stdout(Stdio::piped())
@@ -34,7 +33,7 @@ pub(crate) fn plot_mutex_2D(data: Mutex2D, cmd: &str, args: &[&str]) -> Result<(
                     d[vidx] = e.trim().split_whitespace().filter_map( |word| word.parse::<f64>().ok()).step_by(3).next().expect("No f64 found");
                     vidx += 1;
 
-                if vidx % 3 == 0 {
+                if vidx % 3 == 0 || (d.len() - vidx) < 3  {
                 fg.clear_axes();
                 fg.axes2d()
                 .set_y_range(Auto, Auto)
@@ -100,7 +99,6 @@ pub(crate) fn plot_rwlock_2D(data: RwLock2D, cmd: &str, args: &[&str]) -> Result
                     .flat_map( | word | word.into_iter().flat_map(|e| e.parse::<f64>()) )
                     .for_each( |f| {
                 
-                
                 d.push(f); // d[vidx] = f; is a bug, but why?
                 
                 vidx += 1;
@@ -109,7 +107,7 @@ pub(crate) fn plot_rwlock_2D(data: RwLock2D, cmd: &str, args: &[&str]) -> Result
                 fg.clear_axes();
 
                 fg.axes2d()
-                .set_title("parking_lot vs SeqLock", &[] )
+                .set_title("parking lot vs SeqLock", &[] )
                 .set_y_range(Auto, Auto)
                 .set_x_label(&format!("{}", &xarg), &[])
                 .set_y_label("kHz", &[Rotate(90.0)])
@@ -117,12 +115,12 @@ pub(crate) fn plot_rwlock_2D(data: RwLock2D, cmd: &str, args: &[&str]) -> Result
                 .lines_points(
                         ranger.clone().into_iter(),
                         d[0..].iter().step_by(8),
-                        &[Caption("parking_lot writes"), Color("red") , LineWidth(2.0), PointSymbol('s')],
+                        &[Caption("parking lot writes"), Color("red") , LineWidth(2.0), PointSymbol('s')],
                     )
                 .lines_points(
                         ranger.clone().into_iter(),
                         d[1..].iter().step_by(8),
-                        &[Caption("parking_lot reads"), Color("red") , LineWidth(2.0), PointSymbol('S')],
+                        &[Caption("parking lot reads"), Color("red") , LineWidth(2.0), PointSymbol('S')],
                     )
                 .lines_points(
                         ranger.clone().into_iter(),
@@ -135,9 +133,8 @@ pub(crate) fn plot_rwlock_2D(data: RwLock2D, cmd: &str, args: &[&str]) -> Result
                         &[Caption("SeqLock reads"), Color("purple") , LineWidth(2.0), PointSymbol('O')],
                     );
                 
-                
                  fg.axes2d()
-                    .set_title("parking_lot vs std_RwLock", &[] )
+                    .set_title("parking lot vs std RwLock", &[] )
                     .set_y_range(Auto, Auto)
                     .set_x_label(&format!("{}", &xarg), &[])
                     .set_y_label("kHz", &[Rotate(90.0)])
@@ -145,12 +142,12 @@ pub(crate) fn plot_rwlock_2D(data: RwLock2D, cmd: &str, args: &[&str]) -> Result
                 .lines_points(
                         ranger.clone().into_iter(),
                         d[0..].iter().step_by(8),
-                        &[Caption("parking_lot writes"), Color("red") , LineWidth(2.0), PointSymbol('s')],
+                        &[Caption("parking lot writes"), Color("red") , LineWidth(2.0), PointSymbol('s')],
                     )
                 .lines_points(
                         ranger.clone().into_iter(),
                         d[1..].iter().step_by(8),
-                        &[Caption("parking_lot reads"), Color("red") , LineWidth(2.0), PointSymbol('S')],
+                        &[Caption("parking lot reads"), Color("red") , LineWidth(2.0), PointSymbol('S')],
                     )
                 .lines_points(
                         ranger.clone().into_iter(),
@@ -164,7 +161,7 @@ pub(crate) fn plot_rwlock_2D(data: RwLock2D, cmd: &str, args: &[&str]) -> Result
                     );
 
                 fg.axes2d()
-                        .set_title("parking_lot vs pthread_RwLock", &[] )
+                        .set_title("parking lot vs pthread RwLock", &[] )
                         .set_y_range(Auto, Auto)
                         .set_x_label(&format!("{}", &xarg), &[])
                         .set_y_label("kHz", &[Rotate(90.0)])
@@ -172,12 +169,12 @@ pub(crate) fn plot_rwlock_2D(data: RwLock2D, cmd: &str, args: &[&str]) -> Result
                     .lines_points(
                         ranger.clone().into_iter(),
                         d[0..].iter().step_by(8),
-                        &[Caption("parking_lot writes"), Color("red") , LineWidth(2.0), PointSymbol('s')],
+                        &[Caption("parking lot writes"), Color("red") , LineWidth(2.0), PointSymbol('s')],
                     )
                     .lines_points(
                         ranger.clone().into_iter(),
                         d[1..].iter().step_by(8),
-                        &[Caption("parking_lot reads"), Color("red") , LineWidth(2.0), PointSymbol('S')],
+                        &[Caption("parking lot reads"), Color("red") , LineWidth(2.0), PointSymbol('S')],
                     )
                     .lines_points(
                         ranger.clone().into_iter(),
@@ -198,10 +195,11 @@ pub(crate) fn plot_rwlock_2D(data: RwLock2D, cmd: &str, args: &[&str]) -> Result
 
 pub(crate) fn plot3D<T: LockData3D>(data: T, cmd: &String, args: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
     let stdout = Command::new(cmd)
-            .args(args)
-            .stdout(Stdio::piped())
-            .spawn()?
-            .stdout
-            .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other,"Could not capture standard output." ));
+    .args(args)
+    .stdout(Stdio::piped())
+    .spawn()?
+    .stdout 
+    .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other,"Could not capture standard output."))?;
+
     Ok(())
 }
