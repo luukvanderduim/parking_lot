@@ -53,14 +53,8 @@ use args::*;
 mod plotters;
 use plotters::*;
 
-use gnuplot::*;
-use gnuplot::{Caption, Color, Figure};
-
-use std::boxed::Box;
 use std::error::Error;
-use std::io;
-use std::io::prelude::*;
-use std::io::{Read, BufRead, BufReader};
+use std::io::{BufRead, BufReader};
 use std::{env, process};
 use std::fmt::{Debug, Display};
 use std::process::{Command, Stdio};
@@ -76,11 +70,6 @@ enum MxArg {
     Seconds,
     Iterations,
 }
-impl MxArg {
-    fn name(&self) -> &'static str {
-        &"Mutex"
-    }
-}
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 enum RwArg {
@@ -91,11 +80,6 @@ enum RwArg {
     Seconds,
     Iterations,
 }
-impl RwArg {
-    fn name(&self) -> &'static str {
-        &"RwLock"
-    }
-}
 
 #[derive(Clone, Copy)]
 struct Mutex3D {
@@ -104,12 +88,46 @@ struct Mutex3D {
     xrange: ArgRange,
     yrange: ArgRange,
 }
+
+impl Mutex3D {
+    fn get_x(&self) -> MxArg {
+            self.x
+    }
+    fn get_y(&self) -> MxArg {
+            self.y
+    }
+    fn get_xrange(&self) -> ArgRange {
+            self.xrange
+        }
+    fn get_yrange(&self) -> ArgRange {
+            self.yrange
+        }
+}
+
 #[derive(Clone, Copy)]
 struct RwLock3D {
     x: RwArg,
     y: RwArg,
     xrange: ArgRange,
     yrange: ArgRange,
+}
+
+impl RwLock3D {
+    fn get_id(&self) -> &'static str {
+        &"RwLock"
+    }
+    fn get_x(&self) -> RwArg {
+        self.x
+    }
+    fn get_y(&self) -> RwArg {
+        self.y
+    }
+    fn get_xrange(&self) -> ArgRange {
+        self.xrange
+    }
+    fn get_yrange(&self) -> ArgRange {
+        self.yrange
+    }
 }
 
 
@@ -119,90 +137,35 @@ pub(crate) struct Mutex2D {
     xrange: ArgRange,
 }
 
+impl Mutex2D {
+    fn get_id(&self) -> &'static str {
+        &"Mutex"
+    }
+    fn get_x(&self) -> MxArg {
+            self.x
+        }
+    fn get_xrange(&self) -> ArgRange {
+            self.xrange
+        }
+}
+
+
 #[derive(Clone, Copy)]
 pub(crate) struct RwLock2D {
     x: RwArg,
     xrange: ArgRange,
 }
 
-trait LockData2D {
-    type Axis: Lockstar;
-
-    fn get_id(&self) -> &'static str;
-    fn get_x(&self) -> Self::Axis;
-    fn get_xrange(&self) -> ArgRange;
-}
-impl LockData2D for Mutex2D {
-    type Axis = MxArg;
-    fn get_id(&self) -> &'static str {
-        &"Mutex"
-    }
-    fn get_x(&self) -> Self::Axis {
-            self.x as MxArg
-        }
-    fn get_xrange(&self) -> ArgRange {
-            self.xrange
-        }
-}
-impl LockData2D for RwLock2D {
-    type Axis = RwArg;
-    fn get_id(&self) -> &'static str {
-        &"RWLock"
-    }
-    fn get_x(&self) -> Self::Axis {
-            self.x as RwArg
-        }
-    fn get_xrange(&self) -> ArgRange {
-            self.xrange
-        }
-}
-
-trait LockData3D {
-    type Axis: Lockstar;
-
-    fn get_id(&self) -> &'static str;
-    fn get_x(&self) -> Self::Axis;
-    fn get_y(&self) -> Self::Axis;
-    fn get_xrange(&self) -> ArgRange;
-    fn get_yrange(&self) -> ArgRange;
-}
-impl LockData3D for Mutex3D {
-    type Axis = MxArg;
-
-    fn get_id(&self) -> &'static str {
-        &"Mutex"
-    }
-    fn get_x(&self) -> Self::Axis {
-            self.x as MxArg
-    }
-    fn get_y(&self) -> Self::Axis {
-            self.y as MxArg
-    }
-    fn get_xrange(&self) -> ArgRange {
-            self.xrange
-        }
-    fn get_yrange(&self) -> ArgRange {
-            self.yrange
-        }
-}
-impl LockData3D for RwLock3D {
-    type Axis = RwArg;
-
+impl RwLock2D {
     fn get_id(&self) -> &'static str {
         &"RwLock"
     }
-    fn get_x(&self) -> Self::Axis {
-            self.x as RwArg
-    }
-    fn get_y(&self) -> Self::Axis {
-            self.y as RwArg
+    fn get_x(&self) -> RwArg {
+        self.x
     }
     fn get_xrange(&self) -> ArgRange {
-            self.xrange
-        }
-    fn get_yrange(&self) -> ArgRange {
-            self.yrange
-        }
+        self.xrange
+    }
 }
 
 
@@ -288,14 +251,16 @@ impl FromStr for RwArg {
 
     fn from_str(s: &str) -> Result< Self, Self::Err > {
         use RwArg::*;
+        let s = &*s.to_ascii_lowercase();
+
         match s {
-            "Writers" | "writers" | "W" => Ok(Writers),
-            "Readers" | "readers" | "R" => Ok(Readers),
-            "WorkPer" | "workper" | "per" | "P" => Ok(WorkPer),
-            "WorkBetween"  | "workbetween"| "between" | "B" => Ok(WorkBetween),
-            "Seconds" | "seconds" | "secs" | "S" => Ok(Seconds),
-            "Iterations" | "iterations" | "iters" | "I" => Ok(Iterations),
-            _ => Err("Invalid string for variant"),
+            "writers" | "W"                     => Ok(Writers),
+            "readers" | "R"                     => Ok(Readers),
+            "workper" | "per" | "P"             => Ok(WorkPer),
+            "workbetween"| "between" | "B"      => Ok(WorkBetween),
+            "seconds" | "secs" | "S"            => Ok(Seconds),
+            "iterations" | "iters" | "I"        => Ok(Iterations),
+            _                                   => Err("Invalid string for variant"),
         }
     }
 }
@@ -305,25 +270,26 @@ impl FromStr for MxArg {
 
     fn from_str(s: &str) -> Result< Self, Self::Err > {
         use MxArg::*;
+        let s = &*s.to_ascii_lowercase();
+
         match s {
-            "Threads" | "threads" | "T" => Ok(Threads),
-            "WorkPer" | "workper" | "per" | "P" => Ok(WorkPer),
-            "WorkBetween" | "workbetween" | "between" | "B" => Ok(WorkBetween),
-            "Seconds" | "seconds" | "secs" | "S" => Ok(Seconds),
-            "Iterations" | "iterations" | "iters" | "I" => Ok(Iterations),
-            _ => Err("Invalid string for variant"),
+            "threads" | "t"                     => Ok(Threads),
+            "workper" | "p"                     => Ok(WorkPer),
+            "workbetween" | "between" | "b"     => Ok(WorkBetween),
+            "seconds" | "secs" | "s"            => Ok(Seconds),
+            "iterations" | "iters" | "i"        => Ok(Iterations),
+            _                                   => Err("Invalid string for variant"),
         }
     }
 }
 
 
 /// Returns first an MxArg or RwArg str and reduced arguments list or Errs if none found
-
-fn find_axis<'a>(args: &[&'a str]) -> Result<(&'a str , Vec<String>) , () > {
+fn find_axis<'a>(args: &[&'a str] ) -> Result<(&'a str , Vec<String>) , () > {
     match args.iter().find(| arg | MxArg::from_str(arg).is_ok() || RwArg::from_str(arg).is_ok() ) {
         Some(variant) => {
             let mut argsvec: Vec<&str> = args.into(); 
-            argsvec.remove_item(variant);
+            argsvec.remove_item(&variant.clone());
             Ok( ( variant , argsvec.iter().map(|i| String::from(*i) ).collect::<Vec<String>>() ))
         },
         _ => {
@@ -350,7 +316,7 @@ fn arg_to_range(this_arg: &[&str]) -> Result<ArgRange, ()> {
                 println!("invalid range");
                 process::exit(1);
             }
-            Ok(ArgRange::new(start, end, 1))
+            Ok(args::ArgRange::new(start, end, 1))
         }
         3 => {
             let start = this_arg[0]
@@ -376,8 +342,6 @@ fn arg_to_range(this_arg: &[&str]) -> Result<ArgRange, ()> {
 }
 
 
-
-
 fn main()  {
     let mxcmd = format!("{}/target/{}/release/mutex", MANIFEST, TRIPLET);
     let rwcmd = format!("{}/target/{}/release/rwlock", MANIFEST, TRIPLET);
@@ -396,9 +360,9 @@ fn main()  {
         println!("Parsing args: {:?}", &arguments);
         
         // find_axis() returns, if found, an axis &str and reduced arguments Vec<String>
-        if let Ok((xstr, arguments)) = find_axis(&arguments.iter().map(|i| &**i).collect::<Vec<&str>>()) {
+        if let Ok((xstr, arguments2)) = find_axis(&arguments.iter().map(|i| &**i).collect::<Vec<&str>>()) {
             println!("Found mutex x-axis argument: {}", &xstr);
-            if let Ok((ystr, arguments)) = find_axis(&arguments.iter().map(|i| &**i).collect::<Vec<&str>>()) {
+            if let Ok((ystr, arguments)) = find_axis(&arguments2.iter().map(|i| &**i).collect::<Vec<&str>>()) {
             println!("Found mutex y-axis argument: {}", &ystr);
 
             // mutex expects 5 argumnents
@@ -406,7 +370,9 @@ fn main()  {
            
             // bind xstr and ystr to respective variants of enum MxArg
             let xaxis = MxArg::from_str(xstr).expect(&format!("Unable to match mutex arg: {} to variant", &xstr));
+            println!("Check first arg {}", &xaxis);
             let yaxis = MxArg::from_str(ystr).expect(&format!("Unable to match mutex arg: {} to variant", &ystr));
+            println!("Check second arg {}", &yaxis);
             
             // Check for range validity in corresponding arguments
             assert!(xaxis.check_corresponding_range(&arguments.iter().map(|i| &**i).collect::<Vec<&str>>()).is_ok()); 
@@ -425,7 +391,7 @@ fn main()  {
                 yrange: arg_to_range(&ycomponents).unwrap(),
             };
 
-            if plot3D(m3d, &mxcmd, &arguments.iter().map(|i| &**i).collect::<Vec<_>>()).is_err() {
+            if plot_mutex_3D(m3d, &mxcmd, &arguments.iter().map(|i| &**i).collect::<Vec<_>>()).is_err() {
                 eprintln!("Could not 3D plot mutex run.")
             };
             process::exit(1);

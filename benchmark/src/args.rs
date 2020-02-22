@@ -4,6 +4,8 @@
 // http://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
+ #![allow(dead_code)]
+ #![feature(exact_size_is_empty)]
 
 use std::{env, process};
 
@@ -19,12 +21,16 @@ impl ArgRange {
         self.current.saturating_add(self.step) > self.limit
     }
     
-    pub fn new(cur: usize, lim: usize, s: usize) -> Self {
-        Self {
+    pub fn new(cur: usize, lim: usize, s: usize) -> ArgRange {
+        ArgRange {
             current: cur,
             limit: lim,
             step: s,
         }
+    }
+
+    pub fn get_by_values(&self) -> (usize, usize, usize) {
+        (self.current, self.limit, self.step )
     }
 }
 
@@ -39,6 +45,13 @@ impl Iterator for ArgRange {
             None
         }
     }
+}
+
+impl ExactSizeIterator for ArgRange {
+    fn len(&self) -> usize {
+        self.count()
+    }
+
 }
 
 fn print_usage(names: &[&str], error_msg: Option<String>) -> ! {
